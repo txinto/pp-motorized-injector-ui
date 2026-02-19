@@ -269,8 +269,6 @@ void my_touch_read_cb(lv_indev_t * drv, lv_indev_data_t * data) {
   } else {
     data->state = LV_INDEV_STATE_RELEASED;
   }
-
-  delay(15);
 }
 
 void setup() {
@@ -376,11 +374,26 @@ void loop() {
   static uint32_t lastHeartbeatMs = 0;
   static uint32_t loopIters = 0;
   static int loopPhase = 0;
+  static bool firstLoopTrace = false;
+
+  if (!firstLoopTrace) {
+    firstLoopTrace = true;
+    Serial.println("[LOOP] first iteration: begin");
+  }
 
   loopPhase = 1; // before lv_timer_handler
+  if (loopIters == 0) {
+    Serial.println("[LOOP] first iteration: before lv_timer_handler");
+  }
   lv_timer_handler();
+  if (loopIters == 0) {
+    Serial.println("[LOOP] first iteration: after lv_timer_handler");
+  }
   loopPhase = 2; // after lv_timer_handler
   ui_tick();
+  if (loopIters == 0) {
+    Serial.println("[LOOP] first iteration: after ui_tick");
+  }
   loopPhase = 3; // after ui_tick
 
 #if SCREEN_DIAG_ONLY && !SCREEN_DIAG_ENABLE_PRD_COMMON

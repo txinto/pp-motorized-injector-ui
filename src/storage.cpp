@@ -12,6 +12,10 @@ static constexpr size_t DUMP_MAX_BYTES = 4096;
 #define STORAGE_FORMAT_FS_ON_BOOT 0
 #endif
 
+#ifndef SCREEN_DIAG_SKIP_LAST_PROFILE_ON_LOAD
+#define SCREEN_DIAG_SKIP_LAST_PROFILE_ON_LOAD 0
+#endif
+
 static void dumpMouldsFileHex(const char *path) {
     File f = LittleFS.open(path, FILE_READ);
     if (!f) {
@@ -114,6 +118,14 @@ void loadMoulds(DisplayComms::MouldParams *moulds, int &count, int maxCount) {
                       safeCount, static_cast<unsigned>(maxRecordsBySize));
         safeCount = static_cast<int>(maxRecordsBySize);
     }
+
+#if SCREEN_DIAG_SKIP_LAST_PROFILE_ON_LOAD
+    if (safeCount > 0) {
+        Serial.printf("SCREEN_DIAG_SKIP_LAST_PROFILE_ON_LOAD=1 -> loading %d/%d profiles\n",
+                      safeCount - 1, safeCount);
+        safeCount -= 1;
+    }
+#endif
 
     for (int i = 0; i < safeCount; i++) {
         if (file.read((uint8_t *)&moulds[i], recordSize) != recordSize) {

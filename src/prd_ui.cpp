@@ -33,6 +33,10 @@ namespace {
 #endif
 #endif
 
+#ifndef SCREEN_DIAG_SKIP_LAST_PROFILE_ON_RENDER
+#define SCREEN_DIAG_SKIP_LAST_PROFILE_ON_RENDER 0
+#endif
+
 constexpr lv_coord_t LEFT_X = 8;
 // ... (rest of the file constants)
 
@@ -320,9 +324,15 @@ void onNavigate(lv_event_t *event) {
     target = SCREEN_ID_MAIN;
   }
 #endif
-  eez_flow_set_screen(static_cast<int16_t>(target), LV_SCR_LOAD_ANIM_NONE, 0,
-                      0);
-  logUiState("onNavigate.after");
+  auto navigate_async = [](void *userData) {
+    const intptr_t asyncTarget = reinterpret_cast<intptr_t>(userData);
+    eez_flow_set_screen(static_cast<int16_t>(asyncTarget), LV_SCR_LOAD_ANIM_NONE, 0,
+                        0);
+    Serial.printf("PRD_UI: onNavigate async applied target=%d now screen=%d\n",
+                  static_cast<int>(asyncTarget), static_cast<int>(g_currentScreen));
+    logUiState("onNavigate.after");
+  };
+  lv_async_call(navigate_async, reinterpret_cast<void *>(target));
 }
 
 void onStateActionQueryState(lv_event_t *) { DisplayComms::sendQueryState(); }
@@ -394,8 +404,17 @@ void rebuildMouldList() {
     ui.mouldProfileButtons[i] = nullptr;
   }
 
+  int renderCount = ui.mouldProfileCount;
+#if SCREEN_DIAG_SKIP_LAST_PROFILE_ON_RENDER
+  if (renderCount > 0) {
+    Serial.printf("PRD_UI: SCREEN_DIAG_SKIP_LAST_PROFILE_ON_RENDER=1 -> rendering %d/%d profiles\n",
+                  renderCount - 1, renderCount);
+    renderCount -= 1;
+  }
+#endif
+
   int y = 8;
-  for (int i = 0; i < ui.mouldProfileCount; i++) {
+  for (int i = 0; i < renderCount; i++) {
     Serial.printf("PRD_UI: rebuild idx=%d/%d\n", i + 1, ui.mouldProfileCount);
     char safeName[sizeof(ui.mouldProfiles[i].name)];
     safeName[0] = '\0';
