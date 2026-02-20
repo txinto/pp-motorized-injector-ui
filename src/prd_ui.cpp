@@ -380,10 +380,28 @@ void onMouldProfileSelect(lv_event_t *event) {
 void syncMouldSendEditEnablement() {
   bool hasSelection =
       ui.selectedMould >= 0 && ui.selectedMould < ui.mouldProfileCount;
+
+  Serial.printf("PRD_UI: sync begin sel=%d count=%d hasSel=%d edit=%p send=%p del=%p\n",
+                ui.selectedMould, ui.mouldProfileCount,
+                static_cast<int>(hasSelection),
+                (void *)ui.mouldButtonEdit, (void *)ui.mouldButtonSend,
+                (void *)ui.mouldButtonDelete);
+
+  Serial.println("PRD_UI: sync before edit");
   setButtonEnabled(ui.mouldButtonEdit, hasSelection);
-  setButtonEnabled(ui.mouldButtonSend,
-                   hasSelection && DisplayComms::isSafeForUpdate());
+  Serial.println("PRD_UI: sync after edit");
+
+  Serial.println("PRD_UI: sync before safeForUpdate");
+  bool safeForUpdate = DisplayComms::isSafeForUpdate();
+  Serial.printf("PRD_UI: sync safeForUpdate=%d\n", static_cast<int>(safeForUpdate));
+
+  Serial.println("PRD_UI: sync before send");
+  setButtonEnabled(ui.mouldButtonSend, hasSelection && safeForUpdate);
+  Serial.println("PRD_UI: sync after send");
+
+  Serial.println("PRD_UI: sync before delete");
   setButtonEnabled(ui.mouldButtonDelete, hasSelection);
+  Serial.println("PRD_UI: sync after delete");
 }
 
 void rebuildMouldList() {
@@ -1103,8 +1121,8 @@ void createMouldPanel() {
       createButton(ui.rightPanelMould, "Edit", 236, 648, 96, 52, onMouldEdit);
   ui.mouldButtonNew =
       createButton(ui.rightPanelMould, "New", 70, 712, 96, 52, onMouldNew);
-  ui.mouldButtonDelete = createButton(ui.rightPanelMould, "Delete", 184, 712,
-                                      96, 52, onMouldDelete);
+  ui.mouldButtonDelete = 
+      createButton(ui.rightPanelMould, "Delete", 184, 712, 96, 52, onMouldDelete);
 }
 
 void createMouldEditPanel() {
