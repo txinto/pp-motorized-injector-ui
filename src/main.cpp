@@ -367,9 +367,18 @@ void setup() {
   DisplayComms::sendQueryMould();
   DisplayComms::sendQueryCommon();
 #endif
+
+  Serial.println("[BOOT] setup complete -> entering loop");
 }
 
 void loop() {
+  static bool loopEnteredLogged = false;
+  if (!loopEnteredLogged) 
+  {
+    loopEnteredLogged = true;
+    Serial.println("[LOOP] first iteration entered");
+  }
+
   static int16_t lastScreen = -1;
   static uint32_t lastHeartbeatMs = 0;
   static uint32_t loopIters = 0;
